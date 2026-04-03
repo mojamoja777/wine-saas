@@ -67,7 +67,7 @@ export async function createOrder(
   }
 // 在庫を減算
   for (const item of items) {
-    await supabase.rpc("decrement_stock", {
+    await (supabase as any).rpc("decrement_stock", {
       p_product_id: item.productId,
       p_quantity: item.quantity,
     });
