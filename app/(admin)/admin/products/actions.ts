@@ -37,7 +37,7 @@ export async function createProduct(formData: FormData) {
   });
 
   if (dbError) {
-    return { error: "商品の登録に失敗しました。" };
+    return { error: `登録失敗: ` };
   }
 
   revalidatePath("/admin/products");
