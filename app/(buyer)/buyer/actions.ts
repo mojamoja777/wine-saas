@@ -65,6 +65,12 @@ export async function createOrder(
     await supabase.from("orders").delete().eq("id", order.id);
     return { error: "発注明細の登録に失敗しました。" };
   }
-
+// 在庫を減算
+  for (const item of items) {
+    await supabase.rpc("decrement_stock", {
+      p_product_id: item.productId,
+      p_quantity: item.quantity,
+    });
+  }
   return { orderId: order.id };
 }
