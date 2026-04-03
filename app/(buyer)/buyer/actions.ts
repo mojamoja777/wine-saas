@@ -67,10 +67,17 @@ export async function createOrder(
   }
 // 在庫を減算
   for (const item of items) {
-    await (supabase as any).rpc("decrement_stock", {
-      p_product_id: item.productId,
-      p_quantity: item.quantity,
-    });
+    const { data: product } = await supabase
+      .from("products")
+      .select("stock")
+      .eq("id", item.productId)
+      .single();
+    if (product) {
+      await supabase
+        .from("products")
+        .update({ stock: Math.max(0, product.stock - item.quantity) })
+        .eq("id", item.productId);
+    }
   }
   return { orderId: order.id };
 }
