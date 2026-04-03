@@ -45,7 +45,7 @@ export async function createOrder(
     .single();
 
   if (orderError || !order) {
-    return { error: "発注の作成に失敗しました。" };
+    return { error: orderError?.message || "発注失敗" };
   }
 
   // 発注明細を一括挿入
