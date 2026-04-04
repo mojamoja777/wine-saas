@@ -74,7 +74,7 @@ export async function updateProduct(id: string, formData: FormData) {
       country: values.country || null,
       comment: values.comment || null,
       accept_days: values.accept_days || null,
-      accept_deadline: values.accept_days ? (() => { const d = new Date(); d.setDate(d.getDate() + values.accept_days!); d.setHours(0, 0, 0, 0); return d.toISOString(); })() : null,
+      accept_deadline: values.accept_days ? (() => { const d = new Date(); d.setDate(d.getDate() + values.accept_days! + 1); d.setHours(0, 0, 0, 0); return d.toISOString(); })() : null,
     })
     .eq("id", id);
 
