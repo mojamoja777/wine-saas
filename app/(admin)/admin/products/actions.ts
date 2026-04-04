@@ -119,6 +119,9 @@ type ProductValues = {
   stock: number;
   image_url: string;
   is_active: boolean;
+  country: string;
+  comment: string;
+  accept_days: number | null;
 };
 
 function extractProductValues(formData: FormData): ProductValues {
