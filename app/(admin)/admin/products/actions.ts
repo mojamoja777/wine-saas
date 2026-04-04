@@ -141,8 +141,6 @@ function extractProductValues(formData: FormData): ProductValues {
     country: (formData.get("country") as string).trim(),
     category: (formData.get("category") as string).trim(),
     type: (formData.get("type") as string).trim(),
-    category: (formData.get("category") as string).trim(),
-    type: (formData.get("type") as string).trim(),
     comment: (formData.get("comment") as string).trim(),
     accept_days: formData.get("accept_days") ? parseInt(formData.get("accept_days") as string, 10) : null,
     grape_variety: (formData.get("grape_variety") as string).trim(),
