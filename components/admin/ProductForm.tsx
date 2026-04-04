@@ -67,7 +67,7 @@ export function ProductForm({ product, action, submitLabel }: Props) {
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
               <label key={c} className="cursor-pointer">
-                <input type="radio" name="category" value={c} className="sr-only" defaultChecked={(product as any)?.category === c} onChange={() => setCategory(c)} required />
+                <input type="radio" name="category" value={c} className="sr-only" checked={category === c} onChange={() => setCategory(c)} required />
                 <span className={`inline-block px-4 py-2 rounded-full text-sm border transition-colors ${category === c ? "bg-[#6B1A35] text-white border-[#6B1A35]" : "border-gray-200 text-gray-600 hover:border-[#6B1A35]"}`} onClick={() => setCategory(c)}>{c}</span>
               </label>
             ))}
@@ -81,7 +81,7 @@ export function ProductForm({ product, action, submitLabel }: Props) {
             <div className="flex flex-wrap gap-2">
               {WINE_TYPES.map((t) => (
                 <label key={t} className="cursor-pointer">
-                  <input type="radio" name="type" value={t} className="sr-only" defaultChecked={(product as any)?.type === t} />
+                  <input type="radio" name="type" value={t} className="sr-only" checked={type === t} onChange={() => setType(t)} />
                   <span className={`inline-block px-4 py-2 rounded-full text-sm border transition-colors ${type === t ? "bg-[#6B1A35] text-white border-[#6B1A35]" : "border-gray-200 text-gray-600 hover:border-[#6B1A35]"}`} onClick={() => setType(t)}>{t}</span>
                 </label>
               ))}

@@ -32,7 +32,7 @@ function calc(deadline: string | null | undefined) {
 export function ProductList({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Product | null>(null);
-  const [activeCategory, setActiveCategory] = useState("ワイン");
+  const [activeCategory, setActiveCategory] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>(["ワイン"]);
   const [activeCountry, setActiveCountry] = useState("");
   const [activeRegion, setActiveRegion] = useState("");
