@@ -33,8 +33,17 @@ export async function advanceOrderStatus(orderId: string, currentStatus: string)
 
   // 認証・ロール確認
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.app_metadata?.role !== "admin") {
-    return { error: "管理者権限が必要です。" };
+if (!user) return { error: "ログインが必要です。" };
+
+const { data: userData } = await supabase
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+if (userData?.role !== "admin") {
+  return { error: "管理者権限が必要です。" };
+}
   }
 
   const { error } = await supabase
