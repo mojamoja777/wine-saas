@@ -67,12 +67,6 @@ export type Database = {
           type?: string | null;
           created_at?: string;
           updated_at?: string;
-          country?: string | null;
-          comment?: string | null;
-          accept_days?: number | null;
-          accept_deadline?: string | null;
-          category?: string | null;
-          type?: string | null;
         };
         Update: {
           name?: string;
@@ -84,6 +78,12 @@ export type Database = {
           stock?: number;
           image_url?: string | null;
           is_active?: boolean;
+          country?: string | null;
+          comment?: string | null;
+          accept_days?: number | null;
+          accept_deadline?: string | null;
+          category?: string | null;
+          type?: string | null;
         };
         Relationships: [];
       };
