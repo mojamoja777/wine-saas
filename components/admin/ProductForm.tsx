@@ -28,6 +28,7 @@ export function ProductForm({ product, action, submitLabel }: Props) {
   const [acceptDays, setAcceptDays] = useState(!!(product as any)?.accept_days);
   const [category, setCategory] = useState((product as any)?.category ?? "");
   const [country, setCountry] = useState(product?.country ?? "");
+  const [type, setType] = useState((product as any)?.type ?? "");
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -67,7 +68,7 @@ export function ProductForm({ product, action, submitLabel }: Props) {
             {CATEGORIES.map((c) => (
               <label key={c} className="cursor-pointer">
                 <input type="radio" name="category" value={c} className="sr-only" defaultChecked={(product as any)?.category === c} onChange={() => setCategory(c)} required />
-                <span className={`inline-block px-4 py-2 rounded-full text-sm border transition-colors ${category === c ? "bg-[#6B1A35] text-white border-[#6B1A35]" : "border-gray-200 text-gray-600 hover:border-[#6B1A35]"}`}>{c}</span>
+                <span className={`inline-block px-4 py-2 rounded-full text-sm border transition-colors ${category === c ? "bg-[#6B1A35] text-white border-[#6B1A35]" : "border-gray-200 text-gray-600 hover:border-[#6B1A35]"}`} onClick={() => setCategory(c)}>{c}</span>
               </label>
             ))}
           </div>
@@ -81,7 +82,7 @@ export function ProductForm({ product, action, submitLabel }: Props) {
               {WINE_TYPES.map((t) => (
                 <label key={t} className="cursor-pointer">
                   <input type="radio" name="type" value={t} className="sr-only" defaultChecked={(product as any)?.type === t} />
-                  <span className="inline-block px-4 py-2 rounded-full text-sm border border-gray-200 text-gray-600 hover:border-[#6B1A35] transition-colors">{t}</span>
+                  <span className={`inline-block px-4 py-2 rounded-full text-sm border transition-colors ${type === t ? "bg-[#6B1A35] text-white border-[#6B1A35]" : "border-gray-200 text-gray-600 hover:border-[#6B1A35]"}`} onClick={() => setType(t)}>{t}</span>
                 </label>
               ))}
             </div>
