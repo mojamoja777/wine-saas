@@ -9,7 +9,40 @@ type Product = Database["public"]["Tables"]["products"]["Row"] & {
   country?: string | null;
   comment?: string | null;
   accept_days?: number | null;
+  accept_deadline?: string | null;
 };
+
+function useCountdown(deadline: string | null | undefined) {
+  const [remaining, setRemaining] = useState("");
+  useMemo(() => {
+    if (!deadline) { setRemaining(""); return; }
+    const update = () => {
+      const diff = new Date(deadline).getTime() - Date.now();
+      if (diff <= 0) { setRemaining("受付終了"); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      if (d > 0) setRemaining(`残り${d}日${h}時間${m}分`);
+      else if (h > 0) setRemaining(`残り${h}時間${m}分`);
+      else setRemaining(`残り${m}分`);
+    };
+    update();
+    const timer = setInterval(update, 60000);
+    return () => clearInterval(timer);
+  }, [deadline]);
+  return remaining;
+}
+
+function AcceptDeadlineBlock({ deadline, days }: { deadline?: string | null; days: number }) {
+  const countdown = useCountdown(deadline);
+  return (
+    <div className="bg-[#FDF4F6] rounded-xl p-3 mb-4">
+      <p className="text-xs text-[#6B1A35] font-medium">📋 リクエスト受付期間あり（{days}日間）</p>
+      {countdown && <p className="text-xs text-[#6B1A35] font-bold mt-0.5">{countdown}</p>}
+      <p className="text-xs text-[#6B1A35] mt-0.5">在庫を超えてもご注文いただけます。期間終了後に割り当てを決定します。</p>
+    </div>
+  );
+}
 
 export function ProductList({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
@@ -145,10 +178,7 @@ export function ProductList({ products }: { products: Product[] }) {
 
             {/* リクエスト受付期間 */}
             {selected.accept_days && (
-              <div className="bg-[#FDF4F6] rounded-xl p-3 mb-4">
-                <p className="text-xs text-[#6B1A35] font-medium">📋 リクエスト受付期間あり（{selected.accept_days}日間）</p>
-                <p className="text-xs text-[#6B1A35] mt-0.5">在庫を超えてもご注文いただけます。期間終了後に割り当てを決定します。</p>
-              </div>
+              <AcceptDeadlineBlock deadline={selected.accept_deadline} days={selected.accept_days} />
             )}
 
             {/* コメント */}
