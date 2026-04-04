@@ -1,13 +1,9 @@
 // app/(admin)/admin/orders/actions.ts
 // 発注ステータス更新 Server Action
-
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-
 type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered";
-
 // ステータス遷移ルール：次のステータスを返す
 export const NEXT_STATUS: Record<string, OrderStatus | null> = {
   pending: "confirmed",
@@ -15,13 +11,11 @@ export const NEXT_STATUS: Record<string, OrderStatus | null> = {
   shipped: "delivered",
   delivered: null,
 };
-
 export const NEXT_LABEL: Record<string, string> = {
   pending: "準備中に変更",
   confirmed: "発送済に変更",
   shipped: "配達済に変更",
 };
-
 /**
  * 発注ステータスを次のステップへ進める
  */
@@ -33,17 +27,16 @@ export async function advanceOrderStatus(orderId: string, currentStatus: string)
 
   // 認証・ロール確認
   const { data: { user } } = await supabase.auth.getUser();
-if (!user) return { error: "ログインが必要です。" };
+  if (!user) return { error: "ログインが必要です。" };
 
-const { data: userData } = await supabase
-  .from("users")
-  .select("role")
-  .eq("id", user.id)
-  .single();
+  const { data: userData } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
-if (userData?.role !== "admin") {
-  return { error: "管理者権限が必要です。" };
-}
+  if (userData?.role !== "admin") {
+    return { error: "管理者権限が必要です。" };
   }
 
   const { error } = await supabase
