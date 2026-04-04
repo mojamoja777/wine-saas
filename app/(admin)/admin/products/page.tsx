@@ -56,7 +56,7 @@ export default async function ProductsPage() {
                       {product.vintage && <div className="text-xs text-gray-400">{product.vintage}年</div>}
                     </td>
                     <td className="px-5 py-4 text-gray-600">
-                      <div>{[product.country, product.region].filter(Boolean).join(" / ") || "—"}</div>
+                      <div>{[(product as any).country, product.region].filter(Boolean).join(" / ") || "—"}</div>
                       {product.grape_variety && <div className="text-xs text-gray-400">{product.grape_variety}</div>}
                     </td>
                     <td className="px-5 py-4 text-right font-medium text-gray-900">¥{product.price.toLocaleString()}</td>
