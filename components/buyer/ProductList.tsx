@@ -199,8 +199,8 @@ export function ProductList({ products }: { products: Product[] }) {
 
       {/* 詳細モーダル */}
       {selected && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setSelected(null)}>
-          <div className="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center sm:justify-center p-0 sm:p-4" onClick={() => setSelected(null)}>
+          <div className="bg-white w-full sm:w-[480px] sm:max-w-lg rounded-t-3xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">{selected.name}</h2>
