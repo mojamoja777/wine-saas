@@ -208,7 +208,7 @@ export function ProductList({ products }: { products: Product[] }) {
               </div>
               <button onClick={() => setSelected(null)} className="p-1 text-gray-400"><X className="w-5 h-5" /></button>
             </div>
-            <div className="w-full h-40 rounded-2xl bg-[#FDF4F6] flex items-center justify-center mb-4 overflow-hidden">
+            <div className="w-full aspect-[4/3] rounded-2xl bg-[#FDF4F6] flex items-center justify-center mb-4 overflow-hidden">
               {selected.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={selected.image_url} alt={selected.name} className="h-full object-contain" />
