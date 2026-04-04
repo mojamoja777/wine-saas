@@ -3,8 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Database } from "@/types/database";
+import {
+  CATEGORIES, WINE_TYPES, WINE_COUNTRIES, WINE_REGIONS,
+  SAKE_PREFECTURES, SHOCHU_PREFECTURES, ALL_PREFECTURES
+} from "@/lib/product-constants";
 
-type Product = Database["public"]["Tables"]["products"]["Row"];
+type Product = Database["public"]["Tables"]["products"]["Row"] & {
+  category?: string | null;
+  type?: string | null;
+  country?: string | null;
+  comment?: string | null;
+  accept_days?: number | null;
+};
 
 type Props = {
   product?: Product;
@@ -15,7 +25,9 @@ type Props = {
 export function ProductForm({ product, action, submitLabel }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [acceptDays, setAcceptDays] = useState(false);
+  const [acceptDays, setAcceptDays] = useState(!!(product as any)?.accept_days);
+  const [category, setCategory] = useState((product as any)?.category ?? "");
+  const [country, setCountry] = useState(product?.country ?? "");
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -28,6 +40,15 @@ export function ProductForm({ product, action, submitLabel }: Props) {
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]";
+  const selectClass = inputClass;
+
+  const isWine = category === "ワイン";
+  const isSake = category === "日本酒";
+  const isShochu = category === "焼酎";
+  const isJapanese = isSake || isShochu;
+
+  const prefectureList = isSake ? SAKE_PREFECTURES : isShochu ? SHOCHU_PREFECTURES : ALL_PREFECTURES;
+  const regionList = isWine && country ? (WINE_REGIONS[country] ?? ["その他"]) : [];
 
   return (
     <form action={handleSubmit} className="space-y-6">
@@ -38,51 +59,115 @@ export function ProductForm({ product, action, submitLabel }: Props) {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* カテゴリ */}
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">カテゴリ <span className="text-red-500">*</span></label>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((c) => (
+              <label key={c} className="cursor-pointer">
+                <input type="radio" name="category" value={c} className="sr-only" defaultChecked={(product as any)?.category === c} onChange={() => setCategory(c)} required />
+                <span className={`inline-block px-4 py-2 rounded-full text-sm border transition-colors ${category === c ? "bg-[#6B1A35] text-white border-[#6B1A35]" : "border-gray-200 text-gray-600 hover:border-[#6B1A35]"}`}>{c}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* タイプ（ワインのみ） */}
+        {isWine && (
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">タイプ</label>
+            <div className="flex flex-wrap gap-2">
+              {WINE_TYPES.map((t) => (
+                <label key={t} className="cursor-pointer">
+                  <input type="radio" name="type" value={t} className="sr-only" defaultChecked={(product as any)?.type === t} />
+                  <span className="inline-block px-4 py-2 rounded-full text-sm border border-gray-200 text-gray-600 hover:border-[#6B1A35] transition-colors">{t}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 国（ワインのみ） */}
+        {isWine && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">国</label>
+            <select name="country" defaultValue={product?.country ?? ""} onChange={(e) => setCountry(e.target.value)} className={selectClass}>
+              <option value="">選択してください</option>
+              {WINE_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        )}
+
+        {/* 地域（ワイン×国選択時） */}
+        {isWine && country && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">地域</label>
+            <select name="region" defaultValue={product?.region ?? ""} className={selectClass}>
+              <option value="">選択してください</option>
+              {regionList.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+        )}
+
+        {/* 都道府県（日本酒・焼酎） */}
+        {isJapanese && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">都道府県</label>
+            <select name="region" defaultValue={product?.region ?? ""} className={selectClass}>
+              <option value="">選択してください</option>
+              {prefectureList.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+        )}
+
+        {/* 商品名 */}
         <div className="lg:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">商品名 <span className="text-red-500">*</span></label>
           <input name="name" type="text" defaultValue={product?.name ?? ""} required className={inputClass} />
         </div>
 
+        {/* 生産者 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">生産者</label>
           <input name="producer" type="text" defaultValue={product?.producer ?? ""} className={inputClass} />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ヴィンテージ</label>
-          <input name="vintage" type="number" defaultValue={product?.vintage ?? ""} min={1900} max={new Date().getFullYear()} className={inputClass} />
-        </div>
+        {/* ヴィンテージ（ワインのみ） */}
+        {isWine && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ヴィンテージ</label>
+            <input name="vintage" type="number" defaultValue={product?.vintage ?? ""} min={1900} max={new Date().getFullYear()} className={inputClass} />
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">産地（国）</label>
-          <input name="country" type="text" defaultValue={(product as any)?.country ?? ""} className={inputClass} />
-        </div>
+        {/* 品種（ワインのみ） */}
+        {isWine && (
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">品種</label>
+            <input name="grape_variety" type="text" defaultValue={product?.grape_variety ?? ""} className={inputClass} />
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">産地（地域）</label>
-          <input name="region" type="text" defaultValue={product?.region ?? ""} className={inputClass} />
-        </div>
-
-        <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">品種</label>
-          <input name="grape_variety" type="text" defaultValue={product?.grape_variety ?? ""} className={inputClass} />
-        </div>
-
+        {/* 価格 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">価格（税抜・円） <span className="text-red-500">*</span></label>
           <input name="price" type="number" defaultValue={product?.price ?? ""} required min={0} step={1} className={inputClass} />
         </div>
 
+        {/* 在庫数 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">在庫数</label>
           <input name="stock" type="number" defaultValue={product?.stock ?? 0} min={0} step={1} className={inputClass} />
         </div>
 
+        {/* コメント */}
         <div className="lg:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">コメント（酒屋メモ）</label>
           <textarea name="comment" defaultValue={(product as any)?.comment ?? ""} rows={3} className={inputClass + " resize-none"} />
         </div>
 
+        {/* リクエスト受付期間 */}
         <div className="lg:col-span-2">
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
@@ -102,17 +187,18 @@ export function ProductForm({ product, action, submitLabel }: Props) {
                   <input name="accept_days" type="number" defaultValue={(product as any)?.accept_days ?? 3} min={1} max={30} className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6B1A35]" />
                   <span className="text-sm text-gray-500">日間</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">期間終了後、管理者が各店舗への割り当て数を決定します</p>
               </div>
             )}
           </div>
         </div>
 
+        {/* 画像URL */}
         <div className="lg:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">画像 URL</label>
           <input name="image_url" type="url" defaultValue={product?.image_url ?? ""} className={inputClass} />
         </div>
 
+        {/* 販売状態 */}
         <div className="lg:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">販売状態</label>
           <div className="flex gap-6">

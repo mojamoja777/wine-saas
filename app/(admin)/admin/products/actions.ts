@@ -74,6 +74,8 @@ export async function updateProduct(id: string, formData: FormData) {
       country: values.country || null,
       comment: values.comment || null,
       accept_days: values.accept_days || null,
+      category: values.category || null,
+      type: values.type || null,
       accept_deadline: values.accept_days ? (() => { const d = new Date(); d.setDate(d.getDate() + values.accept_days! + 1); d.setHours(0, 0, 0, 0); const jstOffset = 9 * 60 * 60 * 1000; return new Date(d.getTime() - jstOffset).toISOString(); })() : null,
     })
     .eq("id", id);
@@ -123,6 +125,8 @@ type ProductValues = {
   country: string;
   comment: string;
   accept_days: number | null;
+  category: string;
+  type: string;
 };
 
 function extractProductValues(formData: FormData): ProductValues {
@@ -135,6 +139,10 @@ function extractProductValues(formData: FormData): ProductValues {
     producer: (formData.get("producer") as string).trim(),
     region: (formData.get("region") as string).trim(),
     country: (formData.get("country") as string).trim(),
+    category: (formData.get("category") as string).trim(),
+    type: (formData.get("type") as string).trim(),
+    category: (formData.get("category") as string).trim(),
+    type: (formData.get("type") as string).trim(),
     comment: (formData.get("comment") as string).trim(),
     accept_days: formData.get("accept_days") ? parseInt(formData.get("accept_days") as string, 10) : null,
     grape_variety: (formData.get("grape_variety") as string).trim(),
