@@ -11,7 +11,8 @@ export function DeleteProductButton({ id }: { id: string }) {
     if (!window.confirm("この商品を削除しますか？\nこの操作は取り消せません。")) {
       return;
     }
-    await deleteProduct(id);
+    const result = await deleteProduct(id);
+    if (!result?.error) window.location.reload();
   }
 
   return (

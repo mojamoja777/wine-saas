@@ -47,6 +47,9 @@ export default async function ProductsPage() {
                   産地 / 品種
                 </th>
                 <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  在庫
+                </th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   価格
                 </th>
                 <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
