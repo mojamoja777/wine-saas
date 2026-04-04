@@ -71,6 +71,9 @@ export async function updateProduct(id: string, formData: FormData) {
       stock: values.stock,
       image_url: values.image_url || null,
       is_active: values.is_active,
+      country: values.country || null,
+      comment: values.comment || null,
+      accept_days: values.accept_days || null,
     })
     .eq("id", id);
 
@@ -127,6 +130,9 @@ function extractProductValues(formData: FormData): ProductValues {
     name: (formData.get("name") as string).trim(),
     producer: (formData.get("producer") as string).trim(),
     region: (formData.get("region") as string).trim(),
+    country: (formData.get("country") as string).trim(),
+    comment: (formData.get("comment") as string).trim(),
+    accept_days: formData.get("accept_days") ? parseInt(formData.get("accept_days") as string, 10) : null,
     grape_variety: (formData.get("grape_variety") as string).trim(),
     vintage: vintageRaw ? parseInt(vintageRaw, 10) : null,
     price: priceRaw ? parseFloat(priceRaw) : null,

@@ -1,8 +1,5 @@
 "use client";
 
-// components/admin/ProductForm.tsx
-// 商品登録・編集フォーム（共通コンポーネント）
-
 import { useState } from "react";
 import Link from "next/link";
 import type { Database } from "@/types/database";
@@ -18,193 +15,124 @@ type Props = {
 export function ProductForm({ product, action, submitLabel }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acceptDays, setAcceptDays] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     setError(null);
-
     const result = await action(formData);
-
     if (result?.error) {
       setError(result.error);
       setLoading(false);
     }
-    // 成功時は Server Action 内で redirect() するため戻らない
   }
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]";
 
   return (
     <form action={handleSubmit} className="space-y-6">
-      {/* エラーメッセージ */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
           {error}
         </div>
       )}
 
-      {/* 2カラムグリッド */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* 商品名 */}
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            商品名 <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="name"
-            type="text"
-            defaultValue={product?.name ?? ""}
-            required
-            placeholder="例: Château Margaux 2018"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">商品名 <span className="text-red-500">*</span></label>
+          <input name="name" type="text" defaultValue={product?.name ?? ""} required className={inputClass} />
         </div>
 
-        {/* 生産者 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            生産者
-          </label>
-          <input
-            name="producer"
-            type="text"
-            defaultValue={product?.producer ?? ""}
-            placeholder="例: Château Margaux"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">生産者</label>
+          <input name="producer" type="text" defaultValue={product?.producer ?? ""} className={inputClass} />
         </div>
 
-        {/* 産地 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            産地
-          </label>
-          <input
-            name="region"
-            type="text"
-            defaultValue={product?.region ?? ""}
-            placeholder="例: ボルドー / フランス"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">ヴィンテージ</label>
+          <input name="vintage" type="number" defaultValue={product?.vintage ?? ""} min={1900} max={new Date().getFullYear()} className={inputClass} />
         </div>
 
-        {/* 品種 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            品種
-          </label>
-          <input
-            name="grape_variety"
-            type="text"
-            defaultValue={product?.grape_variety ?? ""}
-            placeholder="例: カベルネ・ソーヴィニヨン"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">産地（国）</label>
+          <input name="country" type="text" defaultValue={(product as any)?.country ?? ""} className={inputClass} />
         </div>
 
-        {/* ヴィンテージ */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            ヴィンテージ
-          </label>
-          <input
-            name="vintage"
-            type="number"
-            defaultValue={product?.vintage ?? ""}
-            placeholder="例: 2018"
-            min={1900}
-            max={new Date().getFullYear()}
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">産地（地域）</label>
+          <input name="region" type="text" defaultValue={product?.region ?? ""} className={inputClass} />
         </div>
 
-        {/* 価格 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            価格（税抜・円） <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="price"
-            type="number"
-            defaultValue={product?.price ?? ""}
-            required
-            min={0}
-            step={1}
-            placeholder="例: 3200"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
-        </div>
-
-        {/* 在庫数 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            在庫数
-          </label>
-          <input
-            name="stock"
-            type="number"
-            defaultValue={product?.stock ?? 0}
-            min={0}
-            step={1}
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
-        </div>
-
-        {/* 画像URL */}
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            画像 URL
-          </label>
-          <input
-            name="image_url"
-            type="url"
-            defaultValue={product?.image_url ?? ""}
-            placeholder="https://..."
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">品種</label>
+          <input name="grape_variety" type="text" defaultValue={product?.grape_variety ?? ""} className={inputClass} />
         </div>
 
-        {/* 販売状態 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">価格（税抜・円） <span className="text-red-500">*</span></label>
+          <input name="price" type="number" defaultValue={product?.price ?? ""} required min={0} step={1} className={inputClass} />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">在庫数</label>
+          <input name="stock" type="number" defaultValue={product?.stock ?? 0} min={0} step={1} className={inputClass} />
+        </div>
+
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            販売状態
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">コメント（酒屋メモ）</label>
+          <textarea name="comment" defaultValue={(product as any)?.comment ?? ""} rows={3} className={inputClass + " resize-none"} />
+        </div>
+
+        <div className="lg:col-span-2">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">リクエスト受付期間を設ける</p>
+                <p className="text-xs text-gray-500 mt-0.5">受付期間中は在庫を超えた発注も受け付け、期間終了後にまとめて割り当てを決定します</p>
+              </div>
+              <button type="button" onClick={() => setAcceptDays(!acceptDays)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${acceptDays ? "bg-[#6B1A35]" : "bg-gray-300"}`}>
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${acceptDays ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
+            </div>
+            {acceptDays && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-1">受付期間（日数）</label>
+                <div className="flex items-center gap-2">
+                  <input name="accept_days" type="number" defaultValue={(product as any)?.accept_days ?? 3} min={1} max={30} className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6B1A35]" />
+                  <span className="text-sm text-gray-500">日間</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">期間終了後、管理者が各店舗への割り当て数を決定します</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">画像 URL</label>
+          <input name="image_url" type="url" defaultValue={product?.image_url ?? ""} className={inputClass} />
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">販売状態</label>
           <div className="flex gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="is_active"
-                value="true"
-                defaultChecked={product?.is_active !== false}
-                className="accent-[#6B1A35]"
-              />
+              <input type="radio" name="is_active" value="true" defaultChecked={product?.is_active !== false} className="accent-[#6B1A35]" />
               <span className="text-sm text-gray-700">販売中</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="is_active"
-                value="false"
-                defaultChecked={product?.is_active === false}
-                className="accent-[#6B1A35]"
-              />
-              <span className="text-sm text-gray-700">非表示（在庫なし等）</span>
+              <input type="radio" name="is_active" value="false" defaultChecked={product?.is_active === false} className="accent-[#6B1A35]" />
+              <span className="text-sm text-gray-700">非表示</span>
             </label>
           </div>
         </div>
       </div>
 
-      {/* ボタン */}
       <div className="flex justify-end gap-3 pt-2">
-        <Link
-          href="/admin/products"
-          className="px-6 py-2.5 text-sm font-medium border border-[#6B1A35] text-[#6B1A35] rounded-xl hover:bg-[#FDF4F6] transition-colors"
-        >
+        <Link href="/admin/products" className="px-6 py-2.5 text-sm font-medium border border-[#6B1A35] text-[#6B1A35] rounded-xl hover:bg-[#FDF4F6] transition-colors">
           キャンセル
         </Link>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2.5 text-sm font-medium bg-[#6B1A35] text-white rounded-xl hover:bg-[#9B2D50] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
+        <button type="submit" disabled={loading} className="px-6 py-2.5 text-sm font-medium bg-[#6B1A35] text-white rounded-xl hover:bg-[#9B2D50] disabled:opacity-50 transition-colors">
           {loading ? "保存中..." : submitLabel}
         </button>
       </div>
