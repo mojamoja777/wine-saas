@@ -164,18 +164,17 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       </div>
 
       {/* ステータス変更 */}
-      {order.status !== "delivered" && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">
-            ステータス変更
-          </h2>
-          <div className="flex items-center gap-4">
-            <StatusBadge status={order.status} />
-            <span className="text-gray-400">→</span>
-            <UpdateStatusButton orderId={order.id} currentStatus={order.status} />
-          </div>
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-4">
+          ステータス変更
+        </h2>
+        <p className="text-sm text-red-500 mb-2">status: {order.status}</p>
+        <div className="flex items-center gap-4">
+          <StatusBadge status={order.status} />
+          <span className="text-gray-400">→</span>
+          <UpdateStatusButton orderId={order.id} currentStatus={order.status} />
         </div>
-      )}
+      </div>
 
       {order.status === "delivered" && (
         <div className="bg-gray-50 rounded-xl border border-gray-200 px-5 py-4 text-sm text-gray-500">
