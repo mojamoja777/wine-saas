@@ -1,7 +1,6 @@
 "use client";
-// components/admin/UpdateStatusButton.tsx
-import { useTransition } from "react";
-import { advanceOrderStatus, NEXT_LABEL } from "@/app/(admin)/admin/orders/actions";
+import { useState } from "react";
+import { advanceOrderStatus } from "@/app/(admin)/admin/orders/actions";
 
 type Props = {
   orderId: string;
@@ -9,25 +8,32 @@ type Props = {
 };
 
 export function UpdateStatusButton({ orderId, currentStatus }: Props) {
-  const [isPending, startTransition] = useTransition();
-  const nextLabel = NEXT_LABEL[currentStatus];
-  if (!nextLabel) return null;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit() {
-    startTransition(async () => {
-      await advanceOrderStatus(orderId, currentStatus);
-    });
+  if (currentStatus !== "pending") return null;
+
+  async function handleClick() {
+    if (!window.confirm("この発注を承認しますか？")) return;
+    setLoading(true);
+    setError(null);
+    const result = await advanceOrderStatus(orderId, currentStatus);
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
   }
 
   return (
-    <form action={handleSubmit}>
+    <div>
+      {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
       <button
-        type="submit"
-        disabled={isPending}
-        className="px-5 py-2.5 bg-[#6B1A35] text-white text-sm font-medium rounded-xl hover:bg-[#9B2D50] disabled:opacity-50 transition-colors"
+        onClick={handleClick}
+        disabled={loading}
+        className="px-5 py-2.5 bg-[#6B1A35] text-white text-sm font-medium rounded-xl hover:bg-[#9B2D50] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {isPending ? "更新中..." : nextLabel}
+        {loading ? "処理中..." : "受注承認"}
       </button>
-    </form>
+    </div>
   );
 }
