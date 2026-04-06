@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/sagawashouta/wine-saas/outputs/**)",
+      "Read(//Users/sagawashouta/wine-saas/agents/**)"
+    ]
+  }
+}
