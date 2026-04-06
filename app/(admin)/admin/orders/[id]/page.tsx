@@ -172,7 +172,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         <div className="flex items-center gap-4">
           <StatusBadge status={order.status} />
           <span className="text-gray-400">→</span>
-          <UpdateStatusButton orderId={order.id} currentStatus={order.status} />
+          <button className="px-4 py-2 bg-red-500 text-white rounded">テストボタン</button>
         </div>
       </div>
 
