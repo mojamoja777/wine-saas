@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* フォント */
+  --font-sans: var(--font-noto-sans-jp), "Inter", sans-serif;
+
+  /* ブランドカラー（ボルドー系） */
+  --color-brand-900: #3b0a1e;
+  --color-brand-700: #6b1a35;
+  --color-brand-500: #9b2d50;
+  --color-brand-200: #d4a0b0;
+  --color-brand-50: #fdf4f6;
+
+  /* セカンダリカラー（ゴールド系） */
+  --color-gold-600: #b8860b;
+  --color-gold-400: #d4a820;
+  --color-gold-100: #fbf3d5;
+}
