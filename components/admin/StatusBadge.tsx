@@ -3,7 +3,7 @@
 
 export const STATUS_LABEL: Record<string, string> = {
   pending: "受付中",
-  confirmed: "準備中",
+  confirmed: "受付完了",
   shipped: "発送済",
   delivered: "配達済",
 };
