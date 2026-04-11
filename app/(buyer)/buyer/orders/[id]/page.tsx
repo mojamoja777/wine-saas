@@ -5,20 +5,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-
-const STATUS_LABEL: Record<string, string> = {
-  pending: "受付中",
-  confirmed: "準備中",
-  shipped: "発送済",
-  delivered: "配達済",
-};
-
-const STATUS_CLASS: Record<string, string> = {
-  pending: "bg-blue-100 text-blue-700",
-  confirmed: "bg-yellow-100 text-yellow-700",
-  shipped: "bg-green-100 text-green-700",
-  delivered: "bg-gray-100 text-gray-500",
-};
+import { StatusBadge } from "@/components/admin/StatusBadge";
+import { BuyerCancelOrderButton } from "@/components/buyer/CancelOrderButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -91,13 +79,7 @@ export default async function OrderDetailPage({ params }: Props) {
             })}
           </p>
         </div>
-        <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-            STATUS_CLASS[order.status] ?? "bg-gray-100 text-gray-500"
-          }`}
-        >
-          {STATUS_LABEL[order.status] ?? order.status}
-        </span>
+        <StatusBadge status={order.status} />
       </div>
 
       {/* 発注内容 */}
@@ -130,9 +112,20 @@ export default async function OrderDetailPage({ params }: Props) {
 
       {/* 備考 */}
       {order.note && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-2">備考</h2>
           <p className="text-sm text-gray-600">{order.note}</p>
+        </div>
+      )}
+
+      {/* キャンセルボタン */}
+      <div className="mt-4">
+        <BuyerCancelOrderButton orderId={order.id} currentStatus={order.status} />
+      </div>
+
+      {order.status === "cancelled" && (
+        <div className="bg-red-50 rounded-xl border border-red-200 px-4 py-3 text-sm text-red-600 mt-4">
+          この発注はキャンセルされました。
         </div>
       )}
     </div>

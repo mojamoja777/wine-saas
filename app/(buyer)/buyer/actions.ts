@@ -1,54 +1,29 @@
-// app/(buyer)/buyer/actions.ts
-// 発注 Server Action
-
 "use server";
-
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { CartItem } from "@/lib/cart-context";
 
-type CreateOrderResult =
-  | { orderId: string; error?: never }
-  | { error: string; orderId?: never };
+type CartItem = {
+  productId: string;
+  quantity: number;
+  price: number;
+  name: string;
+};
 
-/**
- * カートの内容で発注を確定する
- * @returns 成功時は orderId、失敗時は error
- */
-export async function createOrder(
-  items: CartItem[],
-  note: string
-): Promise<CreateOrderResult> {
-  if (items.length === 0) {
-    return { error: "カートが空です。" };
-  }
-
+export async function createOrder(items: CartItem[], note: string) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "ログインが必要です。", orderId: null };
 
-  // 現在のユーザーを取得
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (!items.length) return { error: "カートが空です。", orderId: null };
 
-  if (!user) {
-    return { error: "ログインが必要です。" };
-  }
-
-  // 発注ヘッダを作成
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .insert({
-      buyer_id: user.id,
-      status: "pending",
-      note: note || null,
-    })
+    .insert({ buyer_id: user.id, note: note || null })
     .select("id")
     .single();
 
-  if (orderError || !order) {
-    return { error: orderError?.message || "発注失敗" };
-  }
+  if (orderError || !order) return { error: "発注の作成に失敗しました。", orderId: null };
 
-  // 発注明細を一括挿入
   const orderItems = items.map((item) => ({
     order_id: order.id,
     product_id: item.productId,
@@ -60,24 +35,34 @@ export async function createOrder(
     .from("order_items")
     .insert(orderItems);
 
-  if (itemsError) {
-    // ヘッダだけ作成されてしまった場合はロールバック代わりに削除
-    await supabase.from("orders").delete().eq("id", order.id);
-    return { error: "発注明細の登録に失敗しました。" };
-  }
-// 在庫を減算
-  for (const item of items) {
-    const { data: product } = await supabase
-      .from("products")
-      .select("stock")
-      .eq("id", item.productId)
-      .single();
-    if (product) {
-      await supabase
-        .from("products")
-        .update({ stock: Math.max(0, product.stock - item.quantity) })
-        .eq("id", item.productId);
-    }
-  }
-  return { orderId: order.id };
+  if (itemsError) return { error: "発注明細の登録に失敗しました。", orderId: null };
+
+  return { error: null, orderId: order.id };
+}
+
+export async function cancelOrderByBuyer(orderId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "ログインが必要です。" };
+
+  // 自分の注文かつpendingのみキャンセル可能
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status, buyer_id")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) return { error: "発注が見つかりません。" };
+  if (order.buyer_id !== user.id) return { error: "この発注をキャンセルする権限がありません。" };
+  if (order.status !== "pending") return { error: "受付中の発注のみキャンセルできます。" };
+
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "cancelled" })
+    .eq("id", orderId);
+
+  if (error) return { error: "キャンセルに失敗しました。" };
+
+  revalidatePath("/buyer/orders");
+  revalidatePath("/buyer/orders/" + orderId);
 }

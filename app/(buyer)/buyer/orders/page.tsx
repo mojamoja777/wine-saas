@@ -9,6 +9,7 @@ const STATUS_LABEL: Record<string, string> = {
   confirmed: "準備中",
   shipped: "発送済",
   delivered: "配達済",
+  cancelled: "キャンセル",
 };
 
 const STATUS_CLASS: Record<string, string> = {
@@ -16,6 +17,7 @@ const STATUS_CLASS: Record<string, string> = {
   confirmed: "bg-yellow-100 text-yellow-700",
   shipped: "bg-green-100 text-green-700",
   delivered: "bg-gray-100 text-gray-500",
+  cancelled: "bg-red-100 text-red-700",
 };
 
 export default async function OrdersPage() {

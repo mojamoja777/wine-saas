@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { UpdateStatusButton } from "@/components/admin/UpdateStatusButton";
+import { CancelOrderButton } from "@/components/admin/CancelOrderButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -164,12 +165,21 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       </div>
 
       {/* ステータス変更 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
         <h2 className="text-sm font-semibold text-gray-700 mb-4">
           ステータス変更
         </h2>
-        <UpdateStatusButton orderId={order.id} currentStatus={order.status} />
+        <div className="flex items-center gap-4">
+          <UpdateStatusButton orderId={order.id} currentStatus={order.status} />
+          <CancelOrderButton orderId={order.id} currentStatus={order.status} />
+        </div>
       </div>
+
+      {order.status === "cancelled" && (
+        <div className="bg-red-50 rounded-xl border border-red-200 px-5 py-4 text-sm text-red-600">
+          この発注はキャンセルされました。
+        </div>
+      )}
 
       {order.status === "delivered" && (
         <div className="bg-gray-50 rounded-xl border border-gray-200 px-5 py-4 text-sm text-gray-500">
