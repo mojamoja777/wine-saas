@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, X } from "lucide-react";
-import { AddToCartButton } from "@/components/buyer/AddToCartButton";
+import { useState, useMemo, useEffect } from "react";
+import { Search, X, ShoppingCart } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
 import type { Database } from "@/types/database";
 import { WINE_TYPES, WINE_COUNTRIES, WINE_REGIONS, SAKE_PREFECTURES, SHOCHU_PREFECTURES } from "@/lib/product-constants";
 
@@ -35,13 +35,39 @@ function formatDeadline(deadline: string | null | undefined): string {
 }
 
 export function ProductList({ products }: { products: Product[] }) {
+  const { addItem } = useCart();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
   const [activeCategory, setActiveCategory] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>(["ワイン"]);
   const [activeCountry, setActiveCountry] = useState("");
   const [activeRegion, setActiveRegion] = useState("");
   const [activeType, setActiveType] = useState("");
+
+  // モーダルを開いた時に数量を1にリセット
+  useEffect(() => {
+    if (selected) {
+      setQuantity(1);
+      setJustAdded(false);
+    }
+  }, [selected]);
+
+  const handleAddToCart = () => {
+    if (!selected) return;
+    addItem({
+      id: selected.id,
+      name: selected.name,
+      price: selected.price,
+      isAllocation: selected.is_allocation,
+      allocationDeadline: selected.allocation_deadline,
+      quantity,
+    });
+    setJustAdded(true);
+    // モーダルを閉じる
+    setTimeout(() => setSelected(null), 400);
+  };
 
   function toggleCategory(cat: string) {
     setOpenCategories(prev =>
@@ -296,20 +322,64 @@ export function ProductList({ products }: { products: Product[] }) {
                 <p className="text-sm text-gray-700">{(selected as any).comment}</p>
               </div>
             )}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-lg font-bold text-[#3B0A1E]">¥{selected.price.toLocaleString()}</span>
-              {selected.stock <= 0 && !selected.is_allocation ? (
-                <button disabled className="bg-gray-200 text-gray-400 px-6 py-3 rounded-full text-sm cursor-not-allowed">在庫なし</button>
+            {/* 数量選択・カート追加 */}
+            <div className="pt-3 border-t border-gray-100">
+              {selected.stock <= 0 ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-[#3B0A1E]">
+                    ¥{selected.price.toLocaleString()}
+                  </span>
+                  <button
+                    disabled
+                    className="bg-gray-200 text-gray-400 px-6 py-3 rounded-full text-sm cursor-not-allowed"
+                  >
+                    在庫なし
+                  </button>
+                </div>
               ) : (
-                <AddToCartButton
-                  product={{
-                    id: selected.id,
-                    name: selected.name,
-                    price: selected.price,
-                    isAllocation: selected.is_allocation,
-                    allocationDeadline: selected.allocation_deadline,
-                  }}
-                />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">
+                      {selected.is_allocation ? "希望本数" : "本数"}
+                    </label>
+                    <select
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value))}
+                      className="border border-gray-200 rounded-lg px-4 py-2 text-base font-semibold text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#6B1A35] min-w-[100px]"
+                    >
+                      {Array.from({ length: selected.stock }, (_, i) => i + 1).map(
+                        (n) => (
+                          <option key={n} value={n}>
+                            {n} 本
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span className="text-lg font-bold text-[#3B0A1E]">
+                      ¥{(selected.price * quantity).toLocaleString()}
+                    </span>
+                    <button
+                      onClick={handleAddToCart}
+                      disabled={justAdded}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-colors ${
+                        justAdded
+                          ? "bg-green-500"
+                          : selected.is_allocation
+                            ? "bg-amber-600 hover:bg-amber-700"
+                            : "bg-[#6B1A35] hover:bg-[#9B2D50]"
+                      }`}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      {justAdded
+                        ? "追加しました"
+                        : selected.is_allocation
+                          ? `希望で送る（${quantity}本）`
+                          : `カートに入れる（${quantity}本）`}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

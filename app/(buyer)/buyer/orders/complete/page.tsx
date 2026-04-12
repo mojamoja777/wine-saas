@@ -4,14 +4,22 @@
 import Link from "next/link";
 
 type Props = {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{
+    orderId?: string;
+    normal?: string;
+    allocation?: string;
+  }>;
 };
 
 export default async function CompletePage({ searchParams }: Props) {
-  const { orderId } = await searchParams;
+  const params = await searchParams;
+  // 旧リンク互換：orderId 単体もサポート
+  const normalOrderId = params.normal ?? params.orderId ?? null;
+  const allocationOrderId = params.allocation ?? null;
+  const hasBoth = !!normalOrderId && !!allocationOrderId;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 py-10 text-center">
       {/* 成功アイコン */}
       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
         <span className="text-4xl">✅</span>
@@ -21,17 +29,40 @@ export default async function CompletePage({ searchParams }: Props) {
         発注が完了しました！
       </h1>
 
-      {orderId && (
-        <p className="text-xs text-gray-400 font-mono mb-2">
-          発注ID: {orderId.slice(0, 8).toUpperCase()}
-        </p>
-      )}
-
-      <p className="text-sm text-gray-500 leading-relaxed mb-8">
-        酒屋が確認次第、
-        <br />
-        準備を開始します。
+      <p className="text-sm text-gray-500 leading-relaxed mb-6">
+        {hasBoth
+          ? "通常注文と割り当て注文の2件が作成されました。"
+          : allocationOrderId
+            ? "割り当て注文を受け付けました。"
+            : "酒屋が確認次第、準備を開始します。"}
       </p>
+
+      {/* 注文番号カード */}
+      <div className="w-full max-w-sm space-y-3 mb-8">
+        {normalOrderId && (
+          <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 text-left">
+            <p className="text-xs text-gray-500 mb-1">通常注文</p>
+            <p className="font-mono text-sm text-gray-900">
+              #{normalOrderId.slice(0, 8).toUpperCase()}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              酒屋が確認次第、準備を開始します
+            </p>
+          </div>
+        )}
+        {allocationOrderId && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-left">
+            <p className="text-xs text-amber-700 mb-1">割り当て注文</p>
+            <p className="font-mono text-sm text-amber-900">
+              #{allocationOrderId.slice(0, 8).toUpperCase()}
+            </p>
+            <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+              受付締切後にお店から割り当て本数をご連絡します。
+              <span className="font-semibold">キャンセルはできません。</span>
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="w-full max-w-xs space-y-3">
         <Link

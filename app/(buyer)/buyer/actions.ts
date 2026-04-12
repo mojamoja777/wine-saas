@@ -9,35 +9,218 @@ type CartItem = {
   name: string;
 };
 
-export async function createOrder(items: CartItem[], note: string) {
+export type CartSyncUpdate = {
+  productId: string;
+  name: string;
+  action: "remove" | "mark_allocation" | "mark_normal";
+  reason: string;
+};
+
+/**
+ * カート同期：最新の商品情報を取得し、無効な商品を弾く・割り当て状態の変化を反映する
+ * クライアント側で受け取った結果をもとに localStorage を更新する
+ */
+export async function syncCartAction(productIds: string[]): Promise<{
+  products: Array<{
+    id: string;
+    is_active: boolean;
+    is_allocation: boolean;
+    allocation_deadline: string | null;
+    name: string;
+    price: number;
+  }>;
+}> {
+  if (productIds.length === 0) return { products: [] };
+
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "ログインが必要です。", orderId: null };
+  const { data } = await supabase
+    .from("products")
+    .select("id, is_active, is_allocation, allocation_deadline, name, price")
+    .in("id", productIds);
 
-  if (!items.length) return { error: "カートが空です。", orderId: null };
+  return { products: data ?? [] };
+}
 
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({ buyer_id: user.id, note: note || null })
-    .select("id")
-    .single();
+type CreateOrderResult =
+  | {
+      error: null;
+      normalOrderId: string | null;
+      allocationOrderId: string | null;
+    }
+  | {
+      error: string;
+      normalOrderId: null;
+      allocationOrderId: null;
+    };
 
-  if (orderError || !order) return { error: "発注の作成に失敗しました。", orderId: null };
+/**
+ * カートから発注を作成する
+ * 通常商品と割り当て商品が混在する場合は2件の orders に自動分割する
+ * - 通常商品: status='pending', allocated_quantity = quantity（注文時点で確定）
+ * - 割り当て商品: status='allocation_pending', allocated_quantity = NULL（決定後にセット）
+ */
+export async function createOrder(
+  items: CartItem[],
+  note: string
+): Promise<CreateOrderResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return {
+      error: "ログインが必要です。",
+      normalOrderId: null,
+      allocationOrderId: null,
+    };
 
-  const orderItems = items.map((item) => ({
-    order_id: order.id,
-    product_id: item.productId,
-    quantity: item.quantity,
-    unit_price: item.price,
-  }));
+  if (!items.length)
+    return {
+      error: "カートが空です。",
+      normalOrderId: null,
+      allocationOrderId: null,
+    };
 
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(orderItems);
+  // 最新の商品情報を取得してサーバー側でも割り当て/通常を判定（カート情報は信頼しない）
+  const productIds = items.map((i) => i.productId);
+  const { data: products, error: productsError } = await supabase
+    .from("products")
+    .select("id, is_active, is_allocation, allocation_deadline, price")
+    .in("id", productIds);
 
-  if (itemsError) return { error: "発注明細の登録に失敗しました。", orderId: null };
+  if (productsError || !products) {
+    return {
+      error: "商品情報の取得に失敗しました。",
+      normalOrderId: null,
+      allocationOrderId: null,
+    };
+  }
 
-  return { error: null, orderId: order.id };
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  const now = Date.now();
+
+  const normalItems: CartItem[] = [];
+  const allocationItems: CartItem[] = [];
+  const rejectedNames: string[] = [];
+
+  for (const item of items) {
+    const product = productMap.get(item.productId);
+    if (!product || !product.is_active) {
+      rejectedNames.push(item.name);
+      continue;
+    }
+    if (product.is_allocation) {
+      if (
+        product.allocation_deadline &&
+        new Date(product.allocation_deadline).getTime() <= now
+      ) {
+        rejectedNames.push(item.name);
+        continue;
+      }
+      allocationItems.push(item);
+    } else {
+      normalItems.push(item);
+    }
+  }
+
+  if (rejectedNames.length > 0) {
+    return {
+      error: `次の商品は受付終了または販売停止のため発注できません：${rejectedNames.join("、")}`,
+      normalOrderId: null,
+      allocationOrderId: null,
+    };
+  }
+
+  let normalOrderId: string | null = null;
+  let allocationOrderId: string | null = null;
+
+  // 通常注文の作成
+  if (normalItems.length > 0) {
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        buyer_id: user.id,
+        note: note || null,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (orderError || !order) {
+      return {
+        error: "通常注文の作成に失敗しました。",
+        normalOrderId: null,
+        allocationOrderId: null,
+      };
+    }
+
+    const orderItemsPayload = normalItems.map((item) => ({
+      order_id: order.id,
+      product_id: item.productId,
+      quantity: item.quantity,
+      unit_price: item.price,
+      // 通常商品は注文時点で数量が確定
+      allocated_quantity: item.quantity,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItemsPayload);
+
+    if (itemsError) {
+      return {
+        error: "通常注文の明細登録に失敗しました。",
+        normalOrderId: null,
+        allocationOrderId: null,
+      };
+    }
+    normalOrderId = order.id;
+  }
+
+  // 割り当て注文の作成
+  if (allocationItems.length > 0) {
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        buyer_id: user.id,
+        note: note || null,
+        status: "allocation_pending",
+      })
+      .select("id")
+      .single();
+
+    if (orderError || !order) {
+      return {
+        error: "割り当て注文の作成に失敗しました。",
+        normalOrderId: null,
+        allocationOrderId: null,
+      };
+    }
+
+    const orderItemsPayload = allocationItems.map((item) => ({
+      order_id: order.id,
+      product_id: item.productId,
+      quantity: item.quantity,
+      unit_price: item.price,
+      // 割り当て商品はオーナー決定後にセットする
+      allocated_quantity: null,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItemsPayload);
+
+    if (itemsError) {
+      return {
+        error: "割り当て注文の明細登録に失敗しました。",
+        normalOrderId: null,
+        allocationOrderId: null,
+      };
+    }
+    allocationOrderId = order.id;
+  }
+
+  return { error: null, normalOrderId, allocationOrderId };
 }
 
 export async function cancelOrderByBuyer(orderId: string) {

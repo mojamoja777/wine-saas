@@ -27,6 +27,7 @@ type AddItemInput = {
   price: number;
   isAllocation?: boolean;
   allocationDeadline?: string | null;
+  quantity?: number; // 追加する本数（未指定は1）
 };
 
 type CartContextType = {
@@ -34,6 +35,7 @@ type CartContextType = {
   addItem: (product: AddItemInput) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
+  syncItems: (next: CartItem[]) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -65,12 +67,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, hydrated]);
 
   const addItem = useCallback((product: AddItemInput) => {
+    const addQty = product.quantity ?? 1;
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
         return prev.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + addQty }
             : item
         );
       }
@@ -80,7 +83,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           productId: product.id,
           name: product.name,
           price: product.price,
-          quantity: 1,
+          quantity: addQty,
           isAllocation: product.isAllocation ?? false,
           allocationDeadline: product.allocationDeadline ?? null,
         },
@@ -104,6 +107,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.filter((item) => item.productId !== productId));
   }, []);
 
+  const syncItems = useCallback((next: CartItem[]) => {
+    setItems(next);
+  }, []);
+
   const clearCart = useCallback(() => {
     setItems([]);
   }, []);
@@ -121,6 +128,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addItem,
         updateQuantity,
         removeItem,
+        syncItems,
         clearCart,
         totalItems,
         totalPrice,
