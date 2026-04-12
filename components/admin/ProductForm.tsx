@@ -25,10 +25,18 @@ type Props = {
 export function ProductForm({ product, action, submitLabel }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [acceptDays, setAcceptDays] = useState(!!(product as any)?.accept_days);
+  const [isAllocation, setIsAllocation] = useState(!!product?.is_allocation);
   const [category, setCategory] = useState((product as any)?.category ?? "");
   const [country, setCountry] = useState(product?.country ?? "");
   const [type, setType] = useState((product as any)?.type ?? "");
+
+  // 既存の allocation_deadline を datetime-local 用のフォーマットに変換
+  const formatForDateTimeLocal = (iso: string | null | undefined) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -168,26 +176,33 @@ export function ProductForm({ product, action, submitLabel }: Props) {
           <textarea name="comment" defaultValue={(product as any)?.comment ?? ""} rows={3} className={inputClass + " resize-none"} />
         </div>
 
-        {/* リクエスト受付期間 */}
+        {/* 割り当て対象 */}
         <div className="lg:col-span-2">
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">リクエスト受付期間を設ける</p>
-                <p className="text-xs text-gray-500 mt-0.5">受付期間中は在庫を超えた発注も受け付け、期間終了後にまとめて割り当てを決定します</p>
+                <p className="text-sm font-medium text-gray-700">割り当て対象にする</p>
+                <p className="text-xs text-gray-500 mt-0.5">希少ワイン等の手動配分商品。受付期間中は希望本数のみ受け付け、締切後にオーナーが按分決定します</p>
               </div>
-              <button type="button" onClick={() => setAcceptDays(!acceptDays)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${acceptDays ? "bg-[#6B1A35]" : "bg-gray-300"}`}>
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${acceptDays ? "translate-x-6" : "translate-x-1"}`} />
+              <button type="button" onClick={() => setIsAllocation(!isAllocation)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAllocation ? "bg-[#6B1A35]" : "bg-gray-300"}`}>
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAllocation ? "translate-x-6" : "translate-x-1"}`} />
               </button>
             </div>
-            {acceptDays && (
+            <input type="hidden" name="is_allocation" value={isAllocation ? "true" : "false"} />
+            {isAllocation && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-1">受付期間（日数）</label>
-                <div className="flex items-center gap-2">
-                  <input name="accept_days" type="number" defaultValue={(product as any)?.accept_days ?? 3} min={1} max={30} className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6B1A35]" />
-                  <span className="text-sm text-gray-500">日間</span>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  受付締切日時 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="allocation_deadline"
+                  type="datetime-local"
+                  defaultValue={formatForDateTimeLocal(product?.allocation_deadline)}
+                  required={isAllocation}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6B1A35]"
+                />
+                <p className="text-xs text-gray-500 mt-1">締切日時を過ぎると新規注文を受け付けません</p>
               </div>
             )}
           </div>

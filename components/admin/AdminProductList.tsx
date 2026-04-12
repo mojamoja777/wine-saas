@@ -155,9 +155,29 @@ export function AdminProductList({ products }: { products: Product[] }) {
                   return (
                     <tr key={product.id} className={`transition-colors ${outOfStock ? "bg-gray-50 opacity-60" : "hover:bg-gray-50"}`}>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-gray-900">{product.name}</span>
                           {outOfStock && <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">在庫なし</span>}
+                          {product.is_allocation && (
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full border ${
+                                product.allocation_deadline &&
+                                new Date(product.allocation_deadline) < new Date()
+                                  ? "bg-gray-100 text-gray-500 border-gray-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                              }`}
+                              title={
+                                product.allocation_deadline
+                                  ? `締切：${new Date(product.allocation_deadline).toLocaleString("ja-JP")}`
+                                  : undefined
+                              }
+                            >
+                              {product.allocation_deadline &&
+                              new Date(product.allocation_deadline) < new Date()
+                                ? "割当（締切済）"
+                                : "割当対象"}
+                            </span>
+                          )}
                         </div>
                         {product.vintage && <div className="text-xs text-gray-400">{product.vintage}年</div>}
                       </td>

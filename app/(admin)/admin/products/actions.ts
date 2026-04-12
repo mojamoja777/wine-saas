@@ -34,6 +34,12 @@ export async function createProduct(formData: FormData) {
     stock: values.stock,
     image_url: values.image_url || null,
     is_active: values.is_active,
+    country: values.country || null,
+    comment: values.comment || null,
+    category: values.category || null,
+    type: values.type || null,
+    is_allocation: values.is_allocation,
+    allocation_deadline: values.allocation_deadline,
   });
 
   if (dbError) {
@@ -73,10 +79,10 @@ export async function updateProduct(id: string, formData: FormData) {
       is_active: values.is_active,
       country: values.country || null,
       comment: values.comment || null,
-      accept_days: values.accept_days || null,
       category: values.category || null,
       type: values.type || null,
-      accept_deadline: values.accept_days ? (() => { const d = new Date(); d.setDate(d.getDate() + values.accept_days! + 1); d.setHours(0, 0, 0, 0); const jstOffset = 9 * 60 * 60 * 1000; return new Date(d.getTime() - jstOffset).toISOString(); })() : null,
+      is_allocation: values.is_allocation,
+      allocation_deadline: values.allocation_deadline,
     })
     .eq("id", id);
 
@@ -124,15 +130,22 @@ type ProductValues = {
   is_active: boolean;
   country: string;
   comment: string;
-  accept_days: number | null;
   category: string;
   type: string;
+  is_allocation: boolean;
+  allocation_deadline: string | null;
 };
 
 function extractProductValues(formData: FormData): ProductValues {
   const vintageRaw = formData.get("vintage") as string;
   const priceRaw = formData.get("price") as string;
   const stockRaw = formData.get("stock") as string;
+  const deadlineRaw = formData.get("allocation_deadline") as string | null;
+  const isAllocation = formData.get("is_allocation") === "true";
+
+  // datetime-local のローカル時刻を ISO に変換
+  const allocationDeadline =
+    isAllocation && deadlineRaw ? new Date(deadlineRaw).toISOString() : null;
 
   return {
     name: (formData.get("name") as string).trim(),
@@ -142,13 +155,14 @@ function extractProductValues(formData: FormData): ProductValues {
     category: (formData.get("category") as string).trim(),
     type: (formData.get("type") as string).trim(),
     comment: (formData.get("comment") as string).trim(),
-    accept_days: formData.get("accept_days") ? parseInt(formData.get("accept_days") as string, 10) : null,
     grape_variety: (formData.get("grape_variety") as string).trim(),
     vintage: vintageRaw ? parseInt(vintageRaw, 10) : null,
     price: priceRaw ? parseFloat(priceRaw) : null,
     stock: stockRaw ? parseInt(stockRaw, 10) : 0,
     image_url: (formData.get("image_url") as string).trim(),
     is_active: formData.get("is_active") === "true",
+    is_allocation: isAllocation,
+    allocation_deadline: allocationDeadline,
   };
 }
 
@@ -159,6 +173,9 @@ async function validateProductValues(values: ProductValues): Promise<string | nu
   }
   if (isNaN(values.stock) || values.stock < 0) {
     return "在庫数は0以上の整数で入力してください。";
+  }
+  if (values.is_allocation && !values.allocation_deadline) {
+    return "割り当て対象商品は受付締切日時が必須です。";
   }
   return null;
 }
