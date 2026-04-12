@@ -91,7 +91,7 @@ export type Database = {
         Row: {
           id: string;
           buyer_id: string;
-          status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+          status: "pending" | "confirmed" | "cancelled";
           note: string | null;
           ordered_at: string;
           updated_at: string;
@@ -99,13 +99,13 @@ export type Database = {
         Insert: {
           id?: string;
           buyer_id: string;
-          status?: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+          status?: "pending" | "confirmed" | "cancelled";
           note?: string | null;
           ordered_at?: string;
           updated_at?: string;
         };
         Update: {
-          status?: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+          status?: "pending" | "confirmed" | "cancelled";
           note?: string | null;
         };
         Relationships: [

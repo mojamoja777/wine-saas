@@ -36,7 +36,7 @@ export default async function AdminPage({ searchParams }: Props) {
     .order("ordered_at", { ascending: false });
 
   if (status) {
-    const validStatuses = ["pending", "confirmed", "shipped", "delivered"] as const;
+    const validStatuses = ["pending", "confirmed", "cancelled"] as const;
     type OrderStatus = typeof validStatuses[number];
     if ((validStatuses as readonly string[]).includes(status)) {
       query = query.eq("status", status as OrderStatus);

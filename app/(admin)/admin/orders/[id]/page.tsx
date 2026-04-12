@@ -195,12 +195,6 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           この発注はキャンセルされました。
         </div>
       )}
-
-      {order.status === "delivered" && (
-        <div className="bg-gray-50 rounded-xl border border-gray-200 px-5 py-4 text-sm text-gray-500">
-          この発注は配達済みです。
-        </div>
-      )}
     </div>
   );
 }
