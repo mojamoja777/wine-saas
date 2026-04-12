@@ -14,6 +14,10 @@ export type Database = {
           role: "admin" | "buyer";
           company_name: string;
           tenant_id: string;
+          customer_code: string | null;
+          postal_code: string | null;
+          address: string | null;
+          phone: string | null;
           created_at: string;
         };
         Insert: {
@@ -21,12 +25,20 @@ export type Database = {
           role: "admin" | "buyer";
           company_name: string;
           tenant_id: string;
+          customer_code?: string | null;
+          postal_code?: string | null;
+          address?: string | null;
+          phone?: string | null;
           created_at?: string;
         };
         Update: {
           role?: "admin" | "buyer";
           company_name?: string;
           tenant_id?: string;
+          customer_code?: string | null;
+          postal_code?: string | null;
+          address?: string | null;
+          phone?: string | null;
         };
         Relationships: [
           {

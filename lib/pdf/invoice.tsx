@@ -30,7 +30,6 @@ Font.registerHyphenationCallback((word) => [word]);
 
 export type InvoicePdfData = {
   id: string;
-  buyerCompanyName: string;
   periodStart: string;
   periodEnd: string;
   totalAmount: number;
@@ -44,6 +43,13 @@ export type InvoicePdfData = {
     quantity: number;
     unitPrice: number;
   }>;
+  buyer: {
+    companyName: string;
+    customerCode: string | null;
+    postalCode: string | null;
+    address: string | null;
+    phone: string | null;
+  };
   tenant: {
     companyName: string;
     displayName: string;
@@ -260,10 +266,28 @@ export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
         {/* 宛先・発行元 */}
         <View style={styles.infoRow}>
           <View style={styles.buyerBlock}>
+            {data.buyer.customerCode && (
+              <Text style={styles.buyerMeta}>
+                お客様コード：{data.buyer.customerCode}
+              </Text>
+            )}
             <Text style={styles.buyerName}>
-              {data.buyerCompanyName}　御中
+              {data.buyer.companyName}　御中
             </Text>
-            <Text style={styles.buyerMeta}>
+            {(data.buyer.postalCode || data.buyer.address) && (
+              <Text style={styles.buyerMeta}>
+                {[
+                  data.buyer.postalCode && `〒${data.buyer.postalCode}`,
+                  data.buyer.address,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              </Text>
+            )}
+            {data.buyer.phone && (
+              <Text style={styles.buyerMeta}>TEL: {data.buyer.phone}</Text>
+            )}
+            <Text style={[styles.buyerMeta, { marginTop: 6 }]}>
               請求番号：#{data.id.slice(0, 8).toUpperCase()}
             </Text>
             <Text style={styles.buyerMeta}>
@@ -397,6 +421,6 @@ export async function renderInvoicePdf(data: InvoicePdfData): Promise<Buffer> {
 export function invoicePdfFileName(data: InvoicePdfData): string {
   const d = new Date(data.periodStart);
   const yyyyMm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-  const safeName = data.buyerCompanyName.replace(/[\\/:*?"<>|]/g, "_");
+  const safeName = data.buyer.companyName.replace(/[\\/:*?"<>|]/g, "_");
   return `請求書_${yyyyMm}_${safeName}.pdf`;
 }

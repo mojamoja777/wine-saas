@@ -32,7 +32,13 @@ export async function GET(
       note,
       issued_at,
       updated_at,
-      users!inner ( company_name ),
+      users!inner (
+        company_name,
+        customer_code,
+        postal_code,
+        address,
+        phone
+      ),
       invoice_items (
         product_name,
         producer,
@@ -50,7 +56,13 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const buyer = invoice.users as { company_name: string } | null;
+  const buyer = invoice.users as {
+    company_name: string;
+    customer_code: string | null;
+    postal_code: string | null;
+    address: string | null;
+    phone: string | null;
+  } | null;
   const sortedItems = [...invoice.invoice_items].sort(
     (a, b) => a.sort_order - b.sort_order
   );
@@ -59,7 +71,6 @@ export async function GET(
 
   const data: InvoicePdfData = {
     id: invoice.id,
-    buyerCompanyName: buyer?.company_name ?? "—",
     periodStart: invoice.period_start,
     periodEnd: invoice.period_end,
     totalAmount: Number(invoice.total_amount),
@@ -73,6 +84,13 @@ export async function GET(
       quantity: item.quantity,
       unitPrice: Number(item.unit_price),
     })),
+    buyer: {
+      companyName: buyer?.company_name ?? "—",
+      customerCode: buyer?.customer_code ?? null,
+      postalCode: buyer?.postal_code ?? null,
+      address: buyer?.address ?? null,
+      phone: buyer?.phone ?? null,
+    },
     tenant: {
       companyName: tenant?.company_name ?? "",
       displayName: tenant?.display_name ?? "Mise",
