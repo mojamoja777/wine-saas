@@ -3,7 +3,7 @@
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { UpdateStatusButton } from "@/components/admin/UpdateStatusButton";
@@ -164,7 +164,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* ステータス変更 */}
+      {/* アクション */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
         <h2 className="text-sm font-semibold text-gray-700 mb-4">
           ステータス変更
@@ -174,6 +174,21 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <CancelOrderButton orderId={order.id} currentStatus={order.status} />
         </div>
       </div>
+
+      {/* 伝票発行 */}
+      {order.status !== "cancelled" && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">伝票</h2>
+          <Link
+            href={`/admin/orders/${order.id}/slip`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            納品書を表示
+          </Link>
+        </div>
+      )}
 
       {order.status === "cancelled" && (
         <div className="bg-red-50 rounded-xl border border-red-200 px-5 py-4 text-sm text-red-600">
