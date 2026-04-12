@@ -11,6 +11,8 @@ type Props = {
     id: string;
     name: string;
     price: number;
+    isAllocation?: boolean;
+    allocationDeadline?: string | null;
   };
 };
 

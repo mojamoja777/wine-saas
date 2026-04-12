@@ -17,11 +17,21 @@ export type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  isAllocation: boolean;
+  allocationDeadline: string | null;
+};
+
+type AddItemInput = {
+  id: string;
+  name: string;
+  price: number;
+  isAllocation?: boolean;
+  allocationDeadline?: string | null;
 };
 
 type CartContextType = {
   items: CartItem[];
-  addItem: (product: { id: string; name: string; price: number }) => void;
+  addItem: (product: AddItemInput) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
@@ -54,30 +64,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
-  const addItem = useCallback(
-    (product: { id: string; name: string; price: number }) => {
-      setItems((prev) => {
-        const existing = prev.find((item) => item.productId === product.id);
-        if (existing) {
-          return prev.map((item) =>
-            item.productId === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        }
-        return [
-          ...prev,
-          {
-            productId: product.id,
-            name: product.name,
-            price: product.price,
-            quantity: 1,
-          },
-        ];
-      });
-    },
-    []
-  );
+  const addItem = useCallback((product: AddItemInput) => {
+    setItems((prev) => {
+      const existing = prev.find((item) => item.productId === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.productId === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [
+        ...prev,
+        {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          isAllocation: product.isAllocation ?? false,
+          allocationDeadline: product.allocationDeadline ?? null,
+        },
+      ];
+    });
+  }, []);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {

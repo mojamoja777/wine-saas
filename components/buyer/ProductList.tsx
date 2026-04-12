@@ -9,15 +9,13 @@ import { WINE_TYPES, WINE_COUNTRIES, WINE_REGIONS, SAKE_PREFECTURES, SHOCHU_PREF
 type Product = Database["public"]["Tables"]["products"]["Row"] & {
   country?: string | null;
   comment?: string | null;
-  accept_days?: number | null;
-  accept_deadline?: string | null;
   category?: string | null;
   type?: string | null;
 };
 
 const CATEGORIES = ["ワイン", "日本酒", "焼酎", "ジン", "ウイスキー", "その他"];
 
-function calc(deadline: string | null | undefined) {
+function remainingLabel(deadline: string | null | undefined) {
   if (!deadline) return "";
   const diff = new Date(deadline).getTime() - Date.now();
   if (diff <= 0) return "受付終了";
@@ -27,6 +25,13 @@ function calc(deadline: string | null | undefined) {
   if (d > 0) return `残り${d}日${h}時間`;
   if (h > 0) return `残り${h}時間${m}分`;
   return `残り${m}分`;
+}
+
+function formatDeadline(deadline: string | null | undefined): string {
+  if (!deadline) return "";
+  const d = new Date(deadline);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function ProductList({ products }: { products: Product[] }) {
@@ -51,8 +56,13 @@ export function ProductList({ products }: { products: Product[] }) {
   const regionList = activeCountry ? (WINE_REGIONS[activeCountry] ?? []) : [];
 
   const filtered = useMemo(() => {
+    const now = Date.now();
     return products
       .filter(p => {
+        // 割り当て対象で受付締切を過ぎたものは非表示
+        if (p.is_allocation && p.allocation_deadline) {
+          if (new Date(p.allocation_deadline).getTime() <= now) return false;
+        }
         if (query.trim()) {
           const q = query.toLowerCase();
           if (!p.name.toLowerCase().includes(q) &&
@@ -67,8 +77,9 @@ export function ProductList({ products }: { products: Product[] }) {
         return true;
       })
       .sort((a, b) => {
-        const aOut = a.stock <= 0 && !a.accept_days ? 1 : 0;
-        const bOut = b.stock <= 0 && !b.accept_days ? 1 : 0;
+        // 割り当て商品は在庫切れでも注文可能なので「在庫切れ」としない
+        const aOut = a.stock <= 0 && !a.is_allocation ? 1 : 0;
+        const bOut = b.stock <= 0 && !b.is_allocation ? 1 : 0;
         return aOut - bOut;
       });
   }, [products, query, activeCategory, activeCountry, activeRegion, activeType]);
@@ -166,7 +177,7 @@ export function ProductList({ products }: { products: Product[] }) {
                 {query ? "該当する商品が見つかりません" : "商品がありません"}
               </div>
             ) : filtered.map(product => {
-              const outOfStock = product.stock <= 0 && !product.accept_days;
+              const outOfStock = product.stock <= 0 && !product.is_allocation;
               return (
                 <div key={product.id}
                   onClick={() => setSelected(product)}
@@ -178,8 +189,10 @@ export function ProductList({ products }: { products: Product[] }) {
                     ) : (
                       <span className="text-3xl">🍷</span>
                     )}
-                    {product.accept_days && !outOfStock && (
-                      <span className="absolute top-2 left-2 text-xs bg-[#FDF4F6] text-[#6B1A35] px-2 py-0.5 rounded-full font-medium">受付中</span>
+                    {product.is_allocation && (
+                      <span className="absolute top-2 left-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium border border-amber-200">
+                        割当対象
+                      </span>
                     )}
                     {outOfStock && (
                       <span className="absolute top-2 left-2 text-xs bg-black/40 text-white px-2 py-0.5 rounded-full">在庫なし</span>
@@ -189,6 +202,11 @@ export function ProductList({ products }: { products: Product[] }) {
                     <p className="text-xs font-medium text-gray-900 leading-tight line-clamp-2">{product.name}{product.vintage ? ` ${product.vintage}` : ""}</p>
                     <p className="text-xs text-gray-400 mt-1 truncate">{[product.country, product.region].filter(Boolean).join(" / ") || "—"}</p>
                     <p className="text-sm font-bold text-[#3B0A1E] mt-1.5">¥{product.price.toLocaleString()}</p>
+                    {product.is_allocation && product.allocation_deadline && (
+                      <p className="text-[10px] text-amber-700 mt-1">
+                        締切 {formatDeadline(product.allocation_deadline)}
+                      </p>
+                    )}
                   </div>
                 </div>
               );
@@ -250,11 +268,26 @@ export function ProductList({ products }: { products: Product[] }) {
                 <span className="text-lg font-bold text-[#3B0A1E]">¥{selected.price.toLocaleString()}</span>
               </div>
             </div>
-            {selected.accept_days && (
-              <div className="bg-[#FDF4F6] rounded-xl p-3 mb-4">
-                <p className="text-xs text-[#6B1A35] font-medium">📋 リクエスト受付期間あり（{selected.accept_days}日間）</p>
-                {calc(selected.accept_deadline) && <p className="text-xs text-[#6B1A35] font-bold mt-0.5">{calc(selected.accept_deadline)}</p>}
-                <p className="text-xs text-[#6B1A35] mt-0.5">在庫を超えてもご注文いただけます。</p>
+            {selected.is_allocation && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                <p className="text-xs font-semibold text-amber-900 mb-1">
+                  ⚠ 割り当て対象商品です
+                </p>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  ご希望本数を入力してご注文ください。受付期限後にお店から実際の割り当て本数をご連絡します。
+                  <span className="font-semibold">キャンセル不可</span>のため、ご不明点はお問い合わせください。
+                </p>
+                {selected.allocation_deadline && (
+                  <p className="text-xs font-bold text-amber-900 mt-2">
+                    受付締切：
+                    {new Date(selected.allocation_deadline).toLocaleString("ja-JP", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}（{remainingLabel(selected.allocation_deadline)}）
+                  </p>
+                )}
               </div>
             )}
             {(selected as any).comment && (
@@ -265,10 +298,18 @@ export function ProductList({ products }: { products: Product[] }) {
             )}
             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
               <span className="text-lg font-bold text-[#3B0A1E]">¥{selected.price.toLocaleString()}</span>
-              {selected.stock <= 0 && !selected.accept_days ? (
+              {selected.stock <= 0 && !selected.is_allocation ? (
                 <button disabled className="bg-gray-200 text-gray-400 px-6 py-3 rounded-full text-sm cursor-not-allowed">在庫なし</button>
               ) : (
-                <AddToCartButton product={{ id: selected.id, name: selected.name, price: selected.price }} />
+                <AddToCartButton
+                  product={{
+                    id: selected.id,
+                    name: selected.name,
+                    price: selected.price,
+                    isAllocation: selected.is_allocation,
+                    allocationDeadline: selected.allocation_deadline,
+                  }}
+                />
               )}
             </div>
           </div>
