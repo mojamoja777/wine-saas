@@ -13,17 +13,85 @@ export type Database = {
           id: string;
           role: "admin" | "buyer";
           company_name: string;
+          tenant_id: string;
           created_at: string;
         };
         Insert: {
           id: string;
           role: "admin" | "buyer";
           company_name: string;
+          tenant_id: string;
           created_at?: string;
         };
         Update: {
           role?: "admin" | "buyer";
           company_name?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "users_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      tenants: {
+        Row: {
+          id: string;
+          company_name: string;
+          display_name: string;
+          postal_code: string | null;
+          address: string | null;
+          phone: string | null;
+          fax: string | null;
+          email: string | null;
+          website_url: string | null;
+          invoice_number: string | null;
+          bank_info: string | null;
+          representative: string | null;
+          logo_url: string | null;
+          primary_color: string | null;
+          payment_terms_days: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_name: string;
+          display_name: string;
+          postal_code?: string | null;
+          address?: string | null;
+          phone?: string | null;
+          fax?: string | null;
+          email?: string | null;
+          website_url?: string | null;
+          invoice_number?: string | null;
+          bank_info?: string | null;
+          representative?: string | null;
+          logo_url?: string | null;
+          primary_color?: string | null;
+          payment_terms_days?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          company_name?: string;
+          display_name?: string;
+          postal_code?: string | null;
+          address?: string | null;
+          phone?: string | null;
+          fax?: string | null;
+          email?: string | null;
+          website_url?: string | null;
+          invoice_number?: string | null;
+          bank_info?: string | null;
+          representative?: string | null;
+          logo_url?: string | null;
+          primary_color?: string | null;
+          payment_terms_days?: number;
         };
         Relationships: [];
       };

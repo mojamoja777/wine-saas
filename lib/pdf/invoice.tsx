@@ -44,6 +44,17 @@ export type InvoicePdfData = {
     quantity: number;
     unitPrice: number;
   }>;
+  tenant: {
+    companyName: string;
+    displayName: string;
+    postalCode: string | null;
+    address: string | null;
+    phone: string | null;
+    fax: string | null;
+    invoiceNumber: string | null;
+    bankInfo: string | null;
+    representative: string | null;
+  };
 };
 
 const styles = StyleSheet.create({
@@ -90,10 +101,35 @@ const styles = StyleSheet.create({
   },
   issuerBlock: {
     alignItems: "flex-end",
+    maxWidth: "45%",
   },
   issuerName: {
     fontSize: 12,
     fontWeight: "bold",
+    marginBottom: 3,
+  },
+  issuerMeta: {
+    fontSize: 8,
+    color: "#555",
+    textAlign: "right",
+    lineHeight: 1.4,
+  },
+  bankBlock: {
+    marginTop: 14,
+    padding: 10,
+    borderWidth: 0.5,
+    borderColor: "#d1d5db",
+    borderRadius: 3,
+  },
+  bankLabel: {
+    fontSize: 9,
+    color: "#6b7280",
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  bankText: {
+    fontSize: 9,
+    lineHeight: 1.5,
   },
   totalBox: {
     flexDirection: "row",
@@ -235,7 +271,39 @@ export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
             </Text>
           </View>
           <View style={styles.issuerBlock}>
-            <Text style={styles.issuerName}>Mise</Text>
+            <Text style={styles.issuerName}>
+              {data.tenant.displayName || data.tenant.companyName}
+            </Text>
+            {data.tenant.companyName &&
+              data.tenant.companyName !== data.tenant.displayName && (
+                <Text style={styles.issuerMeta}>{data.tenant.companyName}</Text>
+              )}
+            {(data.tenant.postalCode || data.tenant.address) && (
+              <Text style={styles.issuerMeta}>
+                {[
+                  data.tenant.postalCode && `〒${data.tenant.postalCode}`,
+                  data.tenant.address,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              </Text>
+            )}
+            {data.tenant.phone && (
+              <Text style={styles.issuerMeta}>TEL: {data.tenant.phone}</Text>
+            )}
+            {data.tenant.fax && (
+              <Text style={styles.issuerMeta}>FAX: {data.tenant.fax}</Text>
+            )}
+            {data.tenant.invoiceNumber && (
+              <Text style={styles.issuerMeta}>
+                登録番号: {data.tenant.invoiceNumber}
+              </Text>
+            )}
+            {data.tenant.representative && (
+              <Text style={styles.issuerMeta}>
+                代表者: {data.tenant.representative}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -295,6 +363,14 @@ export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
             </Text>
           </View>
         </View>
+
+        {/* 振込先 */}
+        {data.tenant.bankInfo && (
+          <View style={styles.bankBlock}>
+            <Text style={styles.bankLabel}>お振込先</Text>
+            <Text style={styles.bankText}>{data.tenant.bankInfo}</Text>
+          </View>
+        )}
 
         {/* 備考 */}
         {data.note && (

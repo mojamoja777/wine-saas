@@ -5,6 +5,7 @@
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getTenantByBuyerId, type Tenant } from "@/lib/tenant";
 import {
   invoicePdfFileName,
   renderInvoicePdf,
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
     .select(
       `
       id,
+      buyer_id,
       period_start,
       period_end,
       total_amount,
@@ -73,12 +75,21 @@ export async function GET(request: Request) {
   }
 
   const zip = new JSZip();
+  // tenant情報は同一buyerで重複するのでキャッシュ
+  const tenantCache = new Map<string, Tenant | null>();
 
   for (const invoice of invoices) {
     const buyer = invoice.users as { company_name: string } | null;
     const sortedItems = [...invoice.invoice_items].sort(
       (a, b) => a.sort_order - b.sort_order
     );
+
+    let tenant = tenantCache.get(invoice.buyer_id);
+    if (tenant === undefined) {
+      tenant = await getTenantByBuyerId(supabase, invoice.buyer_id);
+      tenantCache.set(invoice.buyer_id, tenant);
+    }
+
     const data: InvoicePdfData = {
       id: invoice.id,
       buyerCompanyName: buyer?.company_name ?? "—",
@@ -95,6 +106,17 @@ export async function GET(request: Request) {
         quantity: item.quantity,
         unitPrice: Number(item.unit_price),
       })),
+      tenant: {
+        companyName: tenant?.company_name ?? "",
+        displayName: tenant?.display_name ?? "Mise",
+        postalCode: tenant?.postal_code ?? null,
+        address: tenant?.address ?? null,
+        phone: tenant?.phone ?? null,
+        fax: tenant?.fax ?? null,
+        invoiceNumber: tenant?.invoice_number ?? null,
+        bankInfo: tenant?.bank_info ?? null,
+        representative: tenant?.representative ?? null,
+      },
     };
     const pdf = await renderInvoicePdf(data);
     zip.file(invoicePdfFileName(data), pdf);
