@@ -18,6 +18,7 @@ export type Database = {
           postal_code: string | null;
           address: string | null;
           phone: string | null;
+          is_active: boolean;
           created_at: string;
         };
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           postal_code?: string | null;
           address?: string | null;
           phone?: string | null;
+          is_active?: boolean;
           created_at?: string;
         };
         Update: {
@@ -39,6 +41,7 @@ export type Database = {
           postal_code?: string | null;
           address?: string | null;
           phone?: string | null;
+          is_active?: boolean;
         };
         Relationships: [
           {

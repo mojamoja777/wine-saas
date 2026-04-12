@@ -5,11 +5,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, FileText, Settings, Wine } from "lucide-react";
+import { ClipboardList, FileText, Settings, Users, Wine } from "lucide-react";
 import { LogoutButton } from "@/components/LogoutButton";
 
 const navItems = [
   { href: "/admin", label: "発注一覧", icon: ClipboardList, exact: true },
+  { href: "/admin/buyers", label: "顧客管理", icon: Users, exact: false },
   { href: "/admin/products", label: "商品管理", icon: Wine, exact: false },
   { href: "/admin/invoices", label: "請求書", icon: FileText, exact: false },
 ];
