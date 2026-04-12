@@ -26,7 +26,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       note,
       ordered_at,
       updated_at,
-      users!inner (
+      users!orders_buyer_id_fkey!inner (
         company_name
       ),
       order_items (

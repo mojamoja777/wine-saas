@@ -21,7 +21,7 @@ export default async function SlipPage({ params }: Props) {
       status,
       note,
       ordered_at,
-      users!inner (
+      users!orders_buyer_id_fkey!inner (
         company_name
       ),
       order_items (

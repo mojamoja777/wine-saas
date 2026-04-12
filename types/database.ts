@@ -130,6 +130,8 @@ export type Database = {
           accept_deadline: string | null;
           category: string | null;
           type: string | null;
+          is_allocation: boolean;
+          allocation_deadline: string | null;
         };
         Insert: {
           id?: string;
@@ -148,6 +150,8 @@ export type Database = {
           accept_deadline?: string | null;
           category?: string | null;
           type?: string | null;
+          is_allocation?: boolean;
+          allocation_deadline?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -167,6 +171,8 @@ export type Database = {
           accept_deadline?: string | null;
           category?: string | null;
           type?: string | null;
+          is_allocation?: boolean;
+          allocation_deadline?: string | null;
         };
         Relationships: [];
       };
@@ -174,22 +180,28 @@ export type Database = {
         Row: {
           id: string;
           buyer_id: string;
-          status: "pending" | "confirmed" | "cancelled";
+          status: "pending" | "confirmed" | "cancelled" | "allocation_pending";
           note: string | null;
           ordered_at: string;
           updated_at: string;
+          allocation_decided_at: string | null;
+          allocation_decided_by: string | null;
         };
         Insert: {
           id?: string;
           buyer_id: string;
-          status?: "pending" | "confirmed" | "cancelled";
+          status?: "pending" | "confirmed" | "cancelled" | "allocation_pending";
           note?: string | null;
           ordered_at?: string;
           updated_at?: string;
+          allocation_decided_at?: string | null;
+          allocation_decided_by?: string | null;
         };
         Update: {
-          status?: "pending" | "confirmed" | "cancelled";
+          status?: "pending" | "confirmed" | "cancelled" | "allocation_pending";
           note?: string | null;
+          allocation_decided_at?: string | null;
+          allocation_decided_by?: string | null;
         };
         Relationships: [
           {
@@ -208,6 +220,7 @@ export type Database = {
           product_id: string;
           quantity: number;
           unit_price: number;
+          allocated_quantity: number | null;
         };
         Insert: {
           id?: string;
@@ -215,10 +228,12 @@ export type Database = {
           product_id: string;
           quantity: number;
           unit_price: number;
+          allocated_quantity?: number | null;
         };
         Update: {
           quantity?: number;
           unit_price?: number;
+          allocated_quantity?: number | null;
         };
         Relationships: [
           {

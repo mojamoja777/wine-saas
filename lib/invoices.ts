@@ -53,7 +53,7 @@ export async function generateInvoicesForMonth(
       id,
       buyer_id,
       ordered_at,
-      users!inner ( company_name ),
+      users!orders_buyer_id_fkey!inner ( company_name ),
       order_items (
         order_id,
         quantity,
