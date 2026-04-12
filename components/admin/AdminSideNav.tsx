@@ -5,12 +5,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, Wine } from "lucide-react";
+import { ClipboardList, FileText, Wine } from "lucide-react";
 import { LogoutButton } from "@/components/LogoutButton";
 
 const navItems = [
   { href: "/admin", label: "発注一覧", icon: ClipboardList, exact: true },
   { href: "/admin/products", label: "商品管理", icon: Wine, exact: false },
+  { href: "/admin/invoices", label: "請求書", icon: FileText, exact: false },
 ];
 
 export function AdminSideNav() {

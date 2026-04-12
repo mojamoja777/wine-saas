@@ -154,6 +154,95 @@ export type Database = {
           }
         ];
       };
+      invoices: {
+        Row: {
+          id: string;
+          buyer_id: string;
+          period_start: string;
+          period_end: string;
+          total_amount: number;
+          note: string | null;
+          status: "issued" | "paid";
+          issued_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          buyer_id: string;
+          period_start: string;
+          period_end: string;
+          total_amount?: number;
+          note?: string | null;
+          status?: "issued" | "paid";
+          issued_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          total_amount?: number;
+          note?: string | null;
+          status?: "issued" | "paid";
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoices_buyer_id_fkey";
+            columns: ["buyer_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      invoice_items: {
+        Row: {
+          id: string;
+          invoice_id: string;
+          order_id: string | null;
+          product_name: string;
+          producer: string | null;
+          region: string | null;
+          vintage: number | null;
+          quantity: number;
+          unit_price: number;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          invoice_id: string;
+          order_id?: string | null;
+          product_name: string;
+          producer?: string | null;
+          region?: string | null;
+          vintage?: number | null;
+          quantity: number;
+          unit_price: number;
+          sort_order?: number;
+        };
+        Update: {
+          product_name?: string;
+          producer?: string | null;
+          region?: string | null;
+          vintage?: number | null;
+          quantity?: number;
+          unit_price?: number;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_items_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
